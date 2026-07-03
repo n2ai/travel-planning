@@ -2,8 +2,10 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 export default function ForgotPasswordPage() {
+  const router = useRouter();
   const [email, setEmail] = useState("");
 
   function sendCodeClicked() {
@@ -12,19 +14,19 @@ export default function ForgotPasswordPage() {
       return;
     }
 
-    alert("Authentication code sent");
+    router.push("/auth-code");
   }
 
   return (
     <main className="min-h-screen bg-[#f4eddf] flex items-center justify-center px-4">
       <div className="w-full max-w-[560px] min-h-[500px] bg-white rounded-3xl shadow-xl flex items-center justify-center p-8 text-gray-900">
         <div className="w-full max-w-[380px] flex flex-col items-center">
-          <h1 className="mb-4 text-3xl font-bold text-gray-900">
+          <h1 className="mb-5 text-center text-4xl font-bold tracking-tight text-black">
             Forgot Password
           </h1>
 
-          <p className="mb-8 text-center text-sm text-gray-700">
-            Enter your email to receive an authentication code.
+          <p className="mb-8 max-w-[360px] text-center text-sm font-medium leading-5 text-black">
+            Enter your account email. We will send you an authentication code.
           </p>
 
           <input
@@ -37,7 +39,7 @@ export default function ForgotPasswordPage() {
 
           <button
             onClick={sendCodeClicked}
-            className="mb-5 w-full rounded-lg bg-blue-500 py-4 text-white hover:bg-blue-600"
+            className="mb-5 w-full rounded-lg bg-linear-to-r from-[#BB00FF] to-[#2F80ED] py-4 font-medium text-white shadow-md transition hover:opacity-90 active:scale-[0.98]"
           >
             Send Authentication Code
           </button>

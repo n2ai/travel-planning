@@ -51,7 +51,7 @@ export default function LoginPage() {
 
           <button
             onClick={loginButtonClicked}
-            className="mb-4 w-full rounded-lg bg-blue-500 py-4 text-white"
+            className="mb-4 w-full rounded-lg bg-linear-to-r from-[#BB00FF] to-[#2F80ED] py-4 text-base font-medium text-white shadow-md transition hover:opacity-90 active:scale-[0.98]"
           >
             Sign In
           </button>

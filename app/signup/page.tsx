@@ -193,7 +193,7 @@ export default function SignupPage() {
                   : "text-gray-500"
               }
             >
-              ✓ 1 special character
+              ✓ 1 special character "Exmaple: * @ # $ "
             </p>
           </div>
 
@@ -215,7 +215,8 @@ export default function SignupPage() {
 
           <button
             onClick={createAccountClicked}
-            className="mt-3 mb-5 w-full rounded-lg bg-blue-500 py-4 text-base font-medium text-white shadow-md hover:bg-blue-600"
+              className="mt-3 mb-5 w-full rounded-lg bg-linear-to-r from-[#2F80ED] to-[#BB00FF] py-4 text-lg font-semibold text-white shadow-md transition hover:opacity-90 active:scale-[0.98]"
+
           >
             Create Account
           </button>
