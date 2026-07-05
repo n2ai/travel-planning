@@ -5,6 +5,8 @@ import { NextResponse } from "next/server";
 export async function POST(request: Request) {
   const { email, password } = await request.json();
 
+  console.log("Received login request:", { email, password });
+
   if (!email || !password) {
     return NextResponse.json(
       { error: "Thiếu email hoặc mật khẩu" },

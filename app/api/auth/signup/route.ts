@@ -7,7 +7,7 @@ export async function POST(request: Request) {
 
   if (!email || !password) {
     return NextResponse.json(
-      { error: "Thiếu email hoặc mật khẩu" },
+      { error: "Missing email or password" },
       { status: 400 }
     );
   }
@@ -36,12 +36,23 @@ export async function POST(request: Request) {
     password,
   });
 
+
+  //Case A: error -> return error message
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 400 });
+  }
+
+  //Case B: emailed already registered -> return error message
+  if (data.user && data.user.identities?.length === 0) {
+    return NextResponse.json(
+      { error: "Email already registered" },
+      { status: 409 }
+    );
   }
 
   return NextResponse.json({
     user: data.user,
     session: data.session,
   });
+
 }
