@@ -2,19 +2,21 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 export default function LoginPage() {
+  const router = useRouter();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
 
   function loginButtonClicked() {
-    if (username === "" || password === "") {
-      alert("Please enter username and password");
-      return;
-    }
-
-    alert("Login clicked");
+  if (username.trim() === "" || password.trim() === "") {
+    alert("Please enter username and password");
+    return;
   }
+
+  router.push("/");
+}
 
   return (
     <main className="min-h-screen bg-[#f4eddf] flex items-center justify-center px-4">
