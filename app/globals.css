@@ -1,26 +1,38 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+/* ===== Design tokens (Figma) ===== */
+@theme {
+    --color-navy: #0F2A43;
+    --color-blue: #2F80ED;
+    --color-cream: #F7F1E5;
+    --color-lavender: #FDF8FF;
+    --color-coral: #FF6B4A;
+    --color-charcoal: #1F2933;
+
+    --color-grad-purple: #BB00FF;
+    --color-grad-red: #FF0000;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+    --font-heading: var(--font-poppins);
+    --font-body: var(--font-inter);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+/* ===== Custom utilities ===== */
+@utility text-gradient-hero {
+    background-image: linear-gradient(to right, var(--color-grad-purple), var(--color-blue));
+    background-clip: text;
+    -webkit-background-clip: text;
+    color: transparent;
 }
 
+@utility bg-gradient-cta {
+    background-image: linear-gradient(135deg, var(--color-grad-purple), var(--color-blue));
+}
+
+/* ===== Base ===== */
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+    background-color: var(--color-cream);
+    color: var(--color-charcoal);
+    font-family: var(--font-body);
 }

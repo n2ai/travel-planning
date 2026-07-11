@@ -1,6 +1,8 @@
-"use client";
-
-import dynamic from "next/dynamic";
+import {getAllDestinations} from "@/lib/queries/destination";
+import {getDestinationBySlug} from "@/lib/queries/destination";
+import { Destination } from "@/lib/type";
+import GlobeSection from "@/components/GlobeSection";
+import SearchBox from "@/components/SearchBox";
 import Link from "next/link";
 import type { FormEvent } from "react";
 import { useEffect, useRef, useState } from "react";
@@ -382,5 +384,5 @@ export default function HomePage() {
       {/* FEATURE CAROUSEL */}
       <FeatureCarousel />
     </main>
-  );
+  )
 }
