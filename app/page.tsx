@@ -1,8 +1,6 @@
 "use client";
 
-import dynamic from "next/dynamic";
 import Link from "next/link";
-import type { FormEvent } from "react";
 import { useEffect, useRef, useState } from "react";
 import FeatureCarousel from "./components/FeatureCarousel";
 import DestinationShowcase from "./components/DestinationShowcase";
@@ -15,6 +13,11 @@ const Globe = dynamic(() => import("react-globe.gl"), {
     </div>
   ),
 }) as any;
+import type { FormEvent } from "react";
+import GlobeSection from "@/app/components/GlobeSection";
+import FeatureCarousel from "@/app/components/FeatureCarousel";
+// import type { Destination } from "@/lib/type";
+import { getAllDestinations } from "@/lib/queries/destination";
 
 type Destination = {
   id: number;
@@ -82,6 +85,9 @@ const destinations: Destination[] = [
   },
 ];
 
+//You have to fetch data from supabase
+
+
 export default function HomePage() {
   const globeRef = useRef<any>(null);
   const spinTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -108,7 +114,6 @@ export default function HomePage() {
     }
 
     updateGlobeSize();
-
     window.addEventListener("resize", updateGlobeSize);
 
     return () => {
@@ -334,43 +339,13 @@ function createDestinationMarker(item: object) {
           </div>
 
           {/* RIGHT SIDE: GLOBE */}
-          <div className="relative z-20 flex justify-center overflow-visible lg:-ml-10">
-            <div
-              className="relative overflow-visible"
-              style={{
-                width: globeSize,
-                height: globeSize,
-              }}
-            >
-              <div className="pointer-events-none absolute inset-8 rounded-full bg-purple-300/20 blur-3xl" />
-
-              <Globe
-                ref={globeRef}
-                width={globeSize}
-                height={globeSize}
-                backgroundColor="rgba(0,0,0,0)"
-                globeImageUrl="https://unpkg.com/three-globe/example/img/earth-blue-marble.jpg"
-                bumpImageUrl="https://unpkg.com/three-globe/example/img/earth-topology.png"
-                showAtmosphere={true}
-                atmosphereColor="#9b5cff"
-                atmosphereAltitude={0.12}
-                htmlElementsData={destinations}
-                htmlLat={(item: object) => (item as Destination).lat}
-                htmlLng={(item: object) => (item as Destination).lng}
-                htmlAltitude={0.02}
-                htmlElement={createDestinationMarker}
-                htmlElementVisibilityModifier={(
-                  element: HTMLElement,
-                  isVisible: boolean,
-                ) => {
-                  element.style.opacity = isVisible ? "1" : "0";
-                  element.style.pointerEvents = isVisible ? "auto" : "none";
-                }}
-                htmlTransitionDuration={0}
-                onGlobeClick={() => setSelectedDestination(null)}
-              />
-            </div>
-          </div>
+          <GlobeSection
+            globeRef={globeRef}
+            globeSize={globeSize}
+            destinations={destinations}
+            onSelectDestination={setSelectedDestination}
+            onSpinToDestination={spinToDestination}
+          />
         </div>
 
         {/* DESTINATION CARD */}

@@ -2,32 +2,16 @@
 
 import { useState } from "react";
 import Link from "next/link";
-
-type UserAccount = {
-  username: string;
-  email: string;
-  password: string;
-};
-
-function getUsers(): UserAccount[] {
-  const savedUsers = localStorage.getItem("users");
-
-  if (savedUsers === null) {
-    return [];
-  }
-
-  return JSON.parse(savedUsers) as UserAccount[];
-}
-
-function saveUsers(users: UserAccount[]) {
-  localStorage.setItem("users", JSON.stringify(users));
-}
+import { useRouter } from "next/navigation";
 
 export default function SignupPage() {
+  const router = useRouter();
+
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const [usernameError, setUsernameError] = useState("");
   const [emailError, setEmailError] = useState("");
@@ -37,12 +21,7 @@ export default function SignupPage() {
   const passwordHasCapitalLetter = /[A-Z]/.test(password);
   const passwordHasSpecialCharacter = /[!@#$%^&*(),.?":{}|<>]/.test(password);
 
-  function createAccountClicked() {
-    setUsernameError("");
-    setEmailError("");
-    setPasswordError("");
-    setConfirmPasswordError("");
-
+  function validateForm(): boolean {
     let hasError = false;
 
     if (username === "") {
@@ -98,39 +77,68 @@ export default function SignupPage() {
       hasError = true;
     }
 
-    const users = getUsers();
+    return hasError === false;
+  }
 
-    const usernameExists = users.find((user) => user.username === username);
-    const emailExists = users.find((user) => user.email === email);
+  async function createAccountClicked() {
+    // Reset loi cu truoc khi validate lai
+    setUsernameError("");
+    setEmailError("");
+    setPasswordError("");
+    setConfirmPasswordError("");
 
-    if (username !== "" && usernameExists !== undefined) {
-      setUsernameError("Username already exists");
-      hasError = true;
-    }
-
-    if (email !== "" && emailExists !== undefined) {
-      setEmailError("Email already exists");
-      hasError = true;
-    }
-
-    if (hasError === true) {
+    // Buoc 1: validate truoc, form loi thi dung lai, KHONG goi API
+    if (validateForm() === false) {
       return;
     }
 
-    const newUser = {
-      username: username,
-      email: email,
-      password: password,
-    };
+    // Buoc 2: goi API
+    setLoading(true);
 
-    saveUsers([...users, newUser]);
+    try {
+      const response = await fetch("/api/auth/signup", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ username, email, password }),
+      });
 
-    alert("Account created for " + username);
+      const result = await response.json();
 
-    setUsername("");
-    setEmail("");
-    setPassword("");
-    setConfirmPassword("");
+      // Buoc 3: xu ly loi tu server (email/username da ton tai...)
+      if (response.ok === false) {
+        const message = result.error ?? "Signup failed. Please try again.";
+
+        if (message.toLowerCase().includes("email")) {
+          setEmailError(message);
+        } else if (message.toLowerCase().includes("username")) {
+          setUsernameError(message);
+        } else {
+          alert(message);
+        }
+
+        return;
+      }
+
+      // Buoc 4: signup thanh cong
+      if (result.session === null) {
+        // Email confirmation dang BAT -> user phai check mail truoc
+        alert(
+          "Account created! Please check your email to confirm your account."
+        );
+        router.push("/login");
+      } else {
+        // Email confirmation dang TAT -> co session luon, vao app
+        router.push("/");
+        router.refresh();
+      }
+    } catch (error) {
+      // fetch chi throw khi loi mang / server sap
+      alert("An error occurred while creating account. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
@@ -193,7 +201,7 @@ export default function SignupPage() {
                   : "text-gray-500"
               }
             >
-              ✓ 1 special character "Exmaple: * @ # $ "
+              ✓ 1 special character &quot;Example: * @ # $ &quot;
             </p>
           </div>
 
@@ -215,10 +223,10 @@ export default function SignupPage() {
 
           <button
             onClick={createAccountClicked}
-              className="mt-3 mb-5 w-full rounded-lg bg-linear-to-r from-[#2F80ED] to-[#BB00FF] py-4 text-lg font-semibold text-white shadow-md transition hover:opacity-90 active:scale-[0.98]"
-
+            disabled={loading}
+            className="mt-3 mb-5 w-full rounded-lg bg-linear-to-r from-[#2F80ED] to-[#BB00FF] py-4 text-lg font-semibold text-white shadow-md transition hover:opacity-90 active:scale-[0.98] disabled:opacity-60"
           >
-            Create Account
+            {loading ? "Creating account..." : "Create Account"}
           </button>
 
           <p className="text-sm text-gray-700">
