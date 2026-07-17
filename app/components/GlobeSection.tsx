@@ -2,6 +2,7 @@
 
 import dynamic from "next/dynamic";
 import type { RefObject } from "react";
+import type { Destination } from "@/lib/type";
 
 const Globe = dynamic(() => import("react-globe.gl"), {
   ssr: false,
@@ -12,14 +13,7 @@ const Globe = dynamic(() => import("react-globe.gl"), {
   ),
 }) as any;
 
-type Destination = {
-  id: number;
-  name: string;
-  country: string;
-  lat: number;
-  lng: number;
-  description: string;
-};
+
 
 type GlobeSectionProps = {
   globeRef: RefObject<any>;

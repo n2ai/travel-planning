@@ -46,9 +46,6 @@ export default function LoginPage() {
     }
   }
 
-  router.push("/");
-}
-
   return (
     <main className="min-h-screen bg-[#f4eddf] flex items-center justify-center px-4">
       <div className="w-full max-w-[560px] min-h-[650px] bg-white rounded-3xl shadow-xl flex items-center justify-center p-8 text-gray-900">

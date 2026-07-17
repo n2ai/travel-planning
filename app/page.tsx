@@ -4,86 +4,77 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import FeatureCarousel from "./components/FeatureCarousel";
 import DestinationShowcase from "./components/DestinationShowcase";
-
-const Globe = dynamic(() => import("react-globe.gl"), {
-  ssr: false,
-  loading: () => (
-    <div className="flex h-[520px] items-center justify-center">
-      <p className="font-medium text-gray-500">Loading globe...</p>
-    </div>
-  ),
-}) as any;
-import type { FormEvent } from "react";
 import GlobeSection from "@/app/components/GlobeSection";
-import FeatureCarousel from "@/app/components/FeatureCarousel";
-// import type { Destination } from "@/lib/type";
 import { getAllDestinations } from "@/lib/queries/destination";
+import type { Destination } from "@/lib/type";
+import type { FormEvent } from "react";
+import SearchBox from "./components/SearchBox";
 
-type Destination = {
-  id: number;
-  name: string;
-  country: string;
-  lat: number;
-  lng: number;
-  description: string;
-};
+// type Destination = {
+//   id: number;
+//   name: string;
+//   country: string;
+//   lat: number;
+//   lng: number;
+//   description: string;
+// };
 
-const destinations: Destination[] = [
-  {
-    id: 1,
-    name: "Paris",
-    country: "France",
-    lat: 48.8566,
-    lng: 2.3522,
-    description:
-      "Explore the Eiffel Tower, museums, cafés, art, and beautiful historic neighborhoods.",
-  },
-  {
-    id: 2,
-    name: "Tokyo",
-    country: "Japan",
-    lat: 35.6762,
-    lng: 139.6503,
-    description:
-      "Discover Japanese food, traditional temples, shopping, technology, and nightlife.",
-  },
-  {
-    id: 3,
-    name: "Hanoi",
-    country: "Vietnam",
-    lat: 21.0278,
-    lng: 105.8342,
-    description:
-      "Explore the Old Quarter, lakes, Vietnamese food, cafés, and traditional culture.",
-  },
-  {
-    id: 4,
-    name: "New York",
-    country: "United States",
-    lat: 40.7128,
-    lng: -74.006,
-    description:
-      "Visit Times Square, Central Park, famous museums, restaurants, and the Statue of Liberty.",
-  },
-  {
-    id: 5,
-    name: "Bangkok",
-    country: "Thailand",
-    lat: 13.7563,
-    lng: 100.5018,
-    description:
-      "Visit temples, night markets, shopping areas, and famous street-food locations.",
-  },
-  {
-    id: 6,
-    name: "Sydney",
-    country: "Australia",
-    lat: -33.8688,
-    lng: 151.2093,
-    description:
-      "See the Opera House, beaches, coastal walks, neighborhoods, and wildlife.",
-  },
-];
+// const destinations: Destination[] = [
+//   {
+//     id: 1,
+//     name: "Paris",
+//     country: "France",
+//     lat: 48.8566,
+//     lng: 2.3522,
+//     description:
+//       "Explore the Eiffel Tower, museums, cafés, art, and beautiful historic neighborhoods.",
+//   },
+//   {
+//     id: 2,
+//     name: "Tokyo",
+//     country: "Japan",
+//     lat: 35.6762,
+//     lng: 139.6503,
+//     description:
+//       "Discover Japanese food, traditional temples, shopping, technology, and nightlife.",
+//   },
+//   {
+//     id: 3,
+//     name: "Hanoi",
+//     country: "Vietnam",
+//     lat: 21.0278,
+//     lng: 105.8342,
+//     description:
+//       "Explore the Old Quarter, lakes, Vietnamese food, cafés, and traditional culture.",
+//   },
+//   {
+//     id: 4,
+//     name: "New York",
+//     country: "United States",
+//     lat: 40.7128,
+//     lng: -74.006,
+//     description:
+//       "Visit Times Square, Central Park, famous museums, restaurants, and the Statue of Liberty.",
+//   },
+//   {
+//     id: 5,
+//     name: "Bangkok",
+//     country: "Thailand",
+//     lat: 13.7563,
+//     lng: 100.5018,
+//     description:
+//       "Visit temples, night markets, shopping areas, and famous street-food locations.",
+//   },
+//   {
+//     id: 6,
+//     name: "Sydney",
+//     country: "Australia",
+//     lat: -33.8688,
+//     lng: 151.2093,
+//     description:
+//       "See the Opera House, beaches, coastal walks, neighborhoods, and wildlife.",
+//   },
+// ];
 
 //You have to fetch data from supabase
 
@@ -95,8 +86,13 @@ export default function HomePage() {
   const [globeSize, setGlobeSize] = useState(620);
   const [searchText, setSearchText] = useState("");
   const [searchError, setSearchError] = useState("");
-  const [selectedDestination, setSelectedDestination] =
-    useState<Destination | null>(null);
+  const [selectedDestination, setSelectedDestination] = useState<Destination | null>(null);
+  const [destinations, setDestinations] = useState<Destination[]>([]);
+
+  (async()=>{
+    const allDestinations = await getAllDestinations();
+    setDestinations(allDestinations ?? [])
+  })();
 
   useEffect(() => {
     function updateGlobeSize() {
@@ -112,6 +108,8 @@ export default function HomePage() {
 
       setGlobeSize(Math.min(window.innerWidth - 40, 440));
     }
+
+
 
     updateGlobeSize();
     window.addEventListener("resize", updateGlobeSize);
@@ -297,36 +295,12 @@ function createDestinationMarker(item: object) {
               </span>
             </h1>
 
-            <p className="mt-5 text-2xl font-extrabold">
+            <p className="mt-5 text-2xl font-extrabold mb-5">
               Experience the world in your way
             </p>
 
             {/* SEARCH BAR */}
-            <form
-              onSubmit={searchDestination}
-              className="relative z-50 mt-7 w-full max-w-[680px]"
-            >
-              <div className="flex h-[64px] w-full items-center rounded-full bg-white/95 px-6 shadow-[0_14px_35px_rgba(15,23,42,0.18)]">
-                <span className="mr-5 text-4xl font-light text-gray-400">
-                  ⌕
-                </span>
-
-                <input
-                  type="text"
-                  placeholder="Search Destinations"
-                  value={searchText}
-                  onChange={(event) => setSearchText(event.target.value)}
-                  className="min-w-0 flex-1 bg-transparent text-xl text-gray-900 outline-none placeholder:text-gray-400"
-                />
-
-                <button
-                  type="submit"
-                  className="hidden rounded-full bg-linear-to-r from-[#2F80ED] to-[#BB00FF] px-6 py-3 text-base font-bold text-white transition hover:opacity-90 sm:block"
-                >
-                  Search
-                </button>
-              </div>
-            </form>
+            <SearchBox destinations={destinations} />
 
             <p className="mt-2 h-5 text-sm text-red-500">{searchError}</p>
 
