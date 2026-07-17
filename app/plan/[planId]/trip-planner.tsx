@@ -18,14 +18,14 @@ export default function TripPlanner({planId}:{planId:string}){
         id:string,
         displayName:{text:string},
         formattedAddress: string,
-        location:{latitude:number, longtitude:number}
+        location:{latitude:number, longitude:number}
     })=>{
         const place: PickedPlace = {
             id: p.id,
             name: p.displayName.text,
             address: p.formattedAddress,
             lat: p.location.latitude,
-            lng: p.location.longtitude
+            lng: p.location.longitude
         }
 
         setPlaces((prev) =>

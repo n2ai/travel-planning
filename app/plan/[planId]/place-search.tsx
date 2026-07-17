@@ -5,7 +5,7 @@ type Place = {
     id:string,
     displayName: { text: string}
     formattedAddress: string;
-    location: { latitude:number, longtitude: number};
+    location: { latitude:number, longitude: number};
 };
 
 export default function PlaceSearch({onPick}:{ onPick: (p:Place) => void}){
