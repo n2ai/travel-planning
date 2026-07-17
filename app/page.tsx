@@ -2,6 +2,17 @@
 
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
+import FeatureCarousel from "./components/FeatureCarousel";
+import DestinationShowcase from "./components/DestinationShowcase";
+
+const Globe = dynamic(() => import("react-globe.gl"), {
+  ssr: false,
+  loading: () => (
+    <div className="flex h-[520px] items-center justify-center">
+      <p className="font-medium text-gray-500">Loading globe...</p>
+    </div>
+  ),
+}) as any;
 import type { FormEvent } from "react";
 import GlobeSection from "@/app/components/GlobeSection";
 import FeatureCarousel from "@/app/components/FeatureCarousel";
@@ -54,6 +65,24 @@ const destinations: Destination[] = [
     description:
       "Visit Times Square, Central Park, famous museums, restaurants, and the Statue of Liberty.",
   },
+  {
+    id: 5,
+    name: "Bangkok",
+    country: "Thailand",
+    lat: 13.7563,
+    lng: 100.5018,
+    description:
+      "Visit temples, night markets, shopping areas, and famous street-food locations.",
+  },
+  {
+    id: 6,
+    name: "Sydney",
+    country: "Australia",
+    lat: -33.8688,
+    lng: 151.2093,
+    description:
+      "See the Opera House, beaches, coastal walks, neighborhoods, and wildlife.",
+  },
 ];
 
 //You have to fetch data from supabase
@@ -61,6 +90,7 @@ const destinations: Destination[] = [
 
 export default function HomePage() {
   const globeRef = useRef<any>(null);
+  const spinTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const [globeSize, setGlobeSize] = useState(620);
   const [searchText, setSearchText] = useState("");
@@ -88,11 +118,19 @@ export default function HomePage() {
 
     return () => {
       window.removeEventListener("resize", updateGlobeSize);
+
+      if (spinTimerRef.current !== null) {
+        clearTimeout(spinTimerRef.current);
+      }
     };
   }, []);
 
   function spinToDestination(destination: Destination) {
     setSelectedDestination(null);
+
+    if (spinTimerRef.current !== null) {
+      clearTimeout(spinTimerRef.current);
+    }
 
     globeRef.current?.pointOfView(
       {
@@ -103,10 +141,78 @@ export default function HomePage() {
       1200,
     );
 
-    setTimeout(() => {
+    spinTimerRef.current = setTimeout(() => {
       setSelectedDestination(destination);
     }, 1200);
   }
+
+function createDestinationMarker(item: object) {
+  const destination = item as Destination;
+
+  const markerWrapper = document.createElement("div");
+
+  markerWrapper.style.width = "34px";
+  markerWrapper.style.height = "34px";
+  markerWrapper.style.display = "flex";
+  markerWrapper.style.alignItems = "center";
+  markerWrapper.style.justifyContent = "center";
+  markerWrapper.style.pointerEvents = "auto";
+  markerWrapper.style.cursor = "pointer";
+  markerWrapper.style.userSelect = "none";
+
+  const pin = document.createElement("button");
+
+  pin.type = "button";
+  pin.title = `${destination.name}, ${destination.country}`;
+  pin.setAttribute("aria-label", `View ${destination.name}`);
+
+  pin.style.width = "26px";
+  pin.style.height = "26px";
+  pin.style.padding = "0";
+  pin.style.border = "3px solid white";
+  pin.style.borderRadius = "50% 50% 50% 0";
+  pin.style.background = "linear-gradient(135deg, #2F80ED, #BB00FF)";
+  pin.style.boxShadow = "0 0 16px rgba(187, 0, 255, 0.9)";
+  pin.style.transform = "rotate(-45deg)";
+  pin.style.transformOrigin = "center";
+  pin.style.cursor = "pointer";
+  pin.style.pointerEvents = "auto";
+  pin.style.transition = "scale 150ms ease";
+  pin.style.position = "relative";
+
+  const dot = document.createElement("span");
+
+  dot.style.position = "absolute";
+  dot.style.left = "6px";
+  dot.style.top = "6px";
+  dot.style.width = "8px";
+  dot.style.height = "8px";
+  dot.style.borderRadius = "50%";
+  dot.style.backgroundColor = "white";
+  dot.style.pointerEvents = "none";
+
+  pin.appendChild(dot);
+
+  // Hover only makes the marker bigger.
+  // It does NOT show the card anymore.
+  markerWrapper.addEventListener("mouseenter", () => {
+    pin.style.scale = "1.25";
+  });
+
+  markerWrapper.addEventListener("mouseleave", () => {
+    pin.style.scale = "1";
+  });
+
+  // Click spins the globe and shows the card.
+  markerWrapper.addEventListener("click", (event) => {
+    event.stopPropagation();
+    spinToDestination(destination);
+  });
+
+  markerWrapper.appendChild(pin);
+
+  return markerWrapper;
+}
 
   function searchDestination(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -200,7 +306,7 @@ export default function HomePage() {
               onSubmit={searchDestination}
               className="relative z-50 mt-7 w-full max-w-[680px]"
             >
-              <div className="flex h-[72px] w-full items-center rounded-full bg-white/95 px-7 shadow-[0_14px_35px_rgba(15,23,42,0.18)]">
+              <div className="flex h-[64px] w-full items-center rounded-full bg-white/95 px-6 shadow-[0_14px_35px_rgba(15,23,42,0.18)]">
                 <span className="mr-5 text-4xl font-light text-gray-400">
                   ⌕
                 </span>
@@ -215,7 +321,7 @@ export default function HomePage() {
 
                 <button
                   type="submit"
-                  className="hidden rounded-full bg-linear-to-r from-[#2F80ED] to-[#BB00FF] px-8 py-4 text-lg font-bold text-white transition hover:opacity-90 sm:block"
+                  className="hidden rounded-full bg-linear-to-r from-[#2F80ED] to-[#BB00FF] px-6 py-3 text-base font-bold text-white transition hover:opacity-90 sm:block"
                 >
                   Search
                 </button>
@@ -225,7 +331,7 @@ export default function HomePage() {
             <p className="mt-2 h-5 text-sm text-red-500">{searchError}</p>
 
             <Link
-              href="/signup"
+              href="/plan-trip"
               className="mt-14 inline-flex rounded-full bg-linear-to-r from-[#2F80ED] to-[#BB00FF] px-8 py-5 text-xl font-extrabold text-white shadow-[0_14px_28px_rgba(124,58,237,0.35)] transition hover:-translate-y-1 hover:shadow-xl"
             >
               Get started.
@@ -277,7 +383,10 @@ export default function HomePage() {
       </section>
 
       {/* FEATURE CAROUSEL */}
-      <FeatureCarousel />
+          <FeatureCarousel />
+
+      {/* DESTINATION SHOWCASE */}
+          <DestinationShowcase />
     </main>
   );
 }
