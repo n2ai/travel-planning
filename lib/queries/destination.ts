@@ -1,4 +1,4 @@
-import {createClient} from '@/lib/supabase/server';
+import {createClient} from '@/lib/supabase/client';
 import type { Destination } from '@/lib/type';
 
 export async function getAllDestinations():Promise<Destination[]> {
