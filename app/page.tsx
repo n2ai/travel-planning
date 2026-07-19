@@ -89,10 +89,10 @@ export default function HomePage() {
   const [selectedDestination, setSelectedDestination] = useState<Destination | null>(null);
   const [destinations, setDestinations] = useState<Destination[]>([]);
 
-  (async()=>{
-    const allDestinations = await getAllDestinations();
-    setDestinations(allDestinations ?? [])
-  })();
+  // (async()=>{
+  //   const allDestinations = await getAllDestinations();
+  //   setDestinations(allDestinations ?? [])
+  // })();
 
   useEffect(() => {
     function updateGlobeSize() {
@@ -109,10 +109,14 @@ export default function HomePage() {
       setGlobeSize(Math.min(window.innerWidth - 40, 440));
     }
 
-
+    const getDestinations = async()=>{
+      const allDestinations = await getAllDestinations();
+      setDestinations(allDestinations ?? []);
+    }
 
     updateGlobeSize();
     window.addEventListener("resize", updateGlobeSize);
+    getDestinations();
 
     return () => {
       window.removeEventListener("resize", updateGlobeSize);

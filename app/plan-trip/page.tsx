@@ -1,7 +1,9 @@
 import Link from "next/link";
 import PlanTripForm from "../components/PlanTripForm";
+import { PickedDestination } from "../components/PlanTripForm";
 
 export default function PlanTripPage() {
+  
   return (
     <main className="min-h-screen bg-[#f4eddf] text-[#07182f]">
       {/* NAVBAR */}
@@ -50,7 +52,7 @@ export default function PlanTripPage() {
           Plan a new trip
         </h1>
 
-        <PlanTripForm />
+        <PlanTripForm/>
       </section>
     </main>
   );
