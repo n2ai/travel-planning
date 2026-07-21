@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useState, useRef, useEffect } from "react";
+import { useRouter } from "next/navigation";
 
 type Suggestion = {
   placeId: string;
@@ -31,8 +32,10 @@ export default function PlanTripForm() {
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
   const [loading, setLoading] = useState(false);
   const [open, setOpen] = useState(false);
+  const [pickedPlanId, setPickedPlanId] = useState<string | null>(null);
   const timer = useRef<ReturnType<typeof setTimeout>>(undefined);
   const boxRef = useRef<HTMLDivElement>(null);
+  const router = useRouter();
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
@@ -48,7 +51,7 @@ export default function PlanTripForm() {
 
   const handleChange = (q: string) => {
     setQuery(q);
-    setDestination(null); // sửa text = hủy lựa chọn cũ
+    setPickedPlanId(null);
     clearTimeout(timer.current);
     if (q.trim().length < 2) return setSuggestions([]);
 
@@ -56,38 +59,45 @@ export default function PlanTripForm() {
       const res = await fetch(`/api/destinations?q=${encodeURIComponent(q)}`);
       const data = await res.json();
       setSuggestions(data.suggestions ?? []);
+      setOpen(true);
     }, 350);
   };
 
   const handleSelect = async (s: Suggestion) => {
     setQuery(s.text);
     setSuggestions([]);
-    setLoading(true);
-    try {
-      const res = await fetch(`/api/destinations/${s.placeId}`);
-      if (!res.ok) throw new Error(`API ${res.status}`);
-      const detail = await res.json();
-      setDestination({
-        placeId: s.placeId,
-        name: s.mainText,
-        lat: detail.location.latitude,
-        lng: detail.location.longitude,
-      });
-    } catch (e) {
-      console.error('Không lấy được tọa độ:', e);
-    } finally {
-      setLoading(false); // chạy dù thành công hay lỗi
-    }
+    // setLoading(true);
+    setPickedPlanId(s.placeId);
+    // try {
+    //   // const res = await fetch(`/plan/${s.placeId}`);
+    //   // if (!res.ok) throw new Error(`API ${res.status}`);
+    //   // const detail = await res.json();
+    //   // setDestination({
+    //   //   placeId: s.placeId,
+    //   //   name: s.mainText,
+    //   //   lat: detail.location.latitude,
+    //   //   lng: detail.location.longitude,
+    //   // });
+    // } catch (e) {
+    //   console.error('Không lấy được tọa độ:', e);
+    // } finally {
+    //   setLoading(false); // chạy dù thành công hay lỗi
+    // }
   };
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!destination) {
+    if (!pickedPlanId) {
       alert("Please pick a destination from the list");
       return;
     }
-    // bước tiếp theo: gọi createTrip(destination, startDate, endDate) rồi redirect
-    alert(`Starting trip to ${destination.name} (${destination.lat}, ${destination.lng})`);
+    
+    const params = new URLSearchParams();
+    if (startDate) params.set("start", startDate);
+    if (endDate) params.set("end", endDate);
+    const qs = params.toString();
+
+    router.push(`/plan/${pickedPlanId}${qs ? `?${qs}` : ""}`);
   }
 
   return (
@@ -107,9 +117,6 @@ export default function PlanTripForm() {
             placeholder="e.g. Paris, Hawaii, Japan"
             className="w-full bg-transparent text-base text-gray-800 outline-none placeholder:text-gray-400"
           />
-
-          {loading && <span className="ml-2 text-sm text-gray-400">…</span>}
-          {destination && !loading && <span className="ml-2">✓</span>}
         </div>
 
         {/* DROPDOWN */}
@@ -155,7 +162,7 @@ export default function PlanTripForm() {
       <div className="mt-16 flex flex-col items-center">
         <button
           type="submit"
-          disabled={!destination || loading}
+          disabled={!pickedPlanId}
           className="rounded-full bg-linear-to-r from-[#2F80ED] to-[#BB00FF] px-9 py-4 text-base font-black text-white shadow-[0_14px_28px_rgba(124,58,237,0.28)] transition hover:-translate-y-1 hover:shadow-xl disabled:opacity-50 disabled:hover:translate-y-0"
         >
           Start planning
