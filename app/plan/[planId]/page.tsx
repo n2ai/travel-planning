@@ -6,5 +6,6 @@ export default async function PlanPage({
   params: Promise<{ planId: string }>;
 }) {
   const { planId } = await params;
+  console.log(planId)
   return <TripPlanner planId={planId} />;
 }
