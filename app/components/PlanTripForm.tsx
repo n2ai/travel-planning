@@ -75,8 +75,8 @@ export default function PlanTripForm() {
     }
     
     const params = new URLSearchParams();
-    if (startDate) params.set("start", startDate);
-    if (endDate) params.set("end", endDate);
+    if (startDate) params.set("startDate", startDate);
+    if (endDate) params.set("endDate", endDate);
     const qs = params.toString();
     
 
@@ -145,7 +145,7 @@ export default function PlanTripForm() {
       <div className="mt-16 flex flex-col items-center">
         <button
           type="submit"
-          disabled={!query}
+          disabled={!destination}
           className="rounded-full bg-linear-to-r from-[#2F80ED] to-[#BB00FF] px-9 py-4 text-base font-black text-white shadow-[0_14px_28px_rgba(124,58,237,0.28)] transition hover:-translate-y-1 hover:shadow-xl disabled:opacity-50 disabled:hover:translate-y-0"
         >
           Start planning
