@@ -28,17 +28,16 @@ export default function LoginPage() {
         body: JSON.stringify({ email, password }),
       });
 
-      const data = await response.json(); // chi doc body MOT lan duy nhat
+      const data = await response.json();
 
       if (!response.ok) {
         alert(data.error ?? "Login failed");
         return;
       }
 
-      // Khong luu token thu cong - Supabase server client da set session
-      // vao cookie trong route handler roi
+
       router.push("/");
-      router.refresh(); // de server components doc session moi
+      router.refresh();
     } catch (error) {
       alert("An error occurred while logging in. Please try again.");
     } finally {
