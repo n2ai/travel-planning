@@ -1,3 +1,6 @@
+export type Interest = "food" | "culture" | "nature" | "shopping";
+export type Pace = "relaxed" | "medium" | "packed";
+
 export type Destination = {
     id: string
     name: string
@@ -12,4 +15,23 @@ export type Destination = {
     tags: string[]
     featured: boolean
     created_at: string
+}
+
+export type GenerateInput = {
+    cityPlaceId:string
+    startDate:string 
+    endDate:string 
+    hotel: { lat:number, lng:number}
+    interests: Interest[]
+    pace: Pace
+    budgetCents?: number
+}
+
+export type Candidate = {
+    placeId:string
+    name:string
+    lat:number 
+    lng:number 
+    rating:number | null 
+    interest:Interest | "meal"
 }
