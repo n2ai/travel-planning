@@ -1,5 +1,6 @@
 import type { Candidate, Interest, Pace } from "@/lib/type";
 import { supabaseAdmin } from "@/lib/supabase/admin";
+import { viewport } from "three/tsl";
 
 const FIELD_MASK = [
   "places.id",
@@ -61,9 +62,44 @@ export async function collectCandidates(
             .filter((c):c is Candidate => c !== null)
     )
 
-     const [meals, ...activityGroups] = await Promise.all([mealCall, ...activityCalls]);
+    const [meals, ...activityGroups] = await Promise.all([mealCall, ...activityCalls]);
 
-     
+    //Group acitivties and get rid of duplicated  
+    const seen = new Set<string>();
+    const activities:Candidate[] = [];
+    for (const group of activityGroups){
+      for (const c of group){
+        if (!seen.has(c.placeId)){
+          seen.add(c.placeId);
+          activities.push(c)
+        }
+      }
+    }
+
+    //Remove any meals that are in activities 
+    const mealsDedup = meals.filter((c)=>!seen.has(c.placeId));
+
+    //Cache into place_cache
+    await cacheCandidates([...activities, ...mealsDedup])
+
+    return {activities, meals:mealsDedup}
+}
+
+//Saving candidate to place_cache
+async function cacheCandidates(candidates:Candidate[]){
+  if(candidates.length === 0) return;
+  
+  const rows = candidates.map((c)=>({
+    google_place_id: c.placeId,
+    name: c.name,
+    formatted_address:null,
+    lat:c.lat,
+    lng:c.lng,
+    viewport:null,
+    cached_at:new Date().toISOString()
+  }))
+
+  await supabaseAdmin.from("place_cache").upsert(rows, {onConflict:"google_place_id", ignoreDuplicates:true});
 }
 
 export async function nearbySearch(
