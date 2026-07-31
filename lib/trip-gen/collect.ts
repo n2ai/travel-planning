@@ -77,12 +77,12 @@ export async function collectCandidates(
     }
 
     //Remove any meals that are in activities 
-    const mealsDedup = meals.filter((c)=>!seen.has(c.placeId));
+    // const mealsDedup = meals.filter((c)=>!seen.has(c.placeId));
 
     //Cache into place_cache
-    await cacheCandidates([...activities, ...mealsDedup])
+    await cacheCandidates([...activities, ...meals])
 
-    return {activities, meals:mealsDedup}
+    return {activities, meals};
 }
 
 //Saving candidate to place_cache
