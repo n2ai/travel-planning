@@ -1,6 +1,12 @@
 import type { Candidate } from "../type";
 import { haversine } from "./cluster";
 
+// Schedule: acitivity or meal 
+export type Schedule = Candidate & {
+  kind: "activity" | "meal";
+  mela?: "lunch" | "dinner";
+}
+
 //Order destination in 1 day, start from hotel, and return the ordered list of candidates
 // Heuristic: nearest neighbor, always go to the neasest candidate but not visit the same candidate twice
 export function orderByNearest(
@@ -10,7 +16,7 @@ export function orderByNearest(
   const remaining = [...places];   // copy, không phá mảng gốc
   const ordered: Candidate[] = [];
 
-  // Vị trí hiện tại, bắt đầu từ khách sạn
+  //Start from hotel
   let current: { lat: number; lng: number } = hotel;
 
   while (remaining.length > 0) {
