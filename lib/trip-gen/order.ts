@@ -5,6 +5,27 @@ import { haversine } from "./cluster";
 export type ScheduleItem = Candidate & {
   kind: "activity" | "meal";
   mealType?: "lunch" | "dinner";
+  time?: string; // optional time for the schedule item
+}
+
+export function assignTimes(schedule:ScheduleItem[]):ScheduleItem[]{
+  const START_HOUR = 8;
+  const ACTIVITY_MIN = 90;
+  const MEAL_MIN = 60;
+
+  let minutes = START_HOUR * 60; //change to minutes
+
+  return schedule.map((item)=>{
+    const time = formatTime(minutes);
+    minutes += item.kind === "activity" ? ACTIVITY_MIN : MEAL_MIN;
+    return { ...item, time };
+  })
+}
+
+const formatTime = (minutes:number):string=>{
+  const h = Math.floor(minutes / 60);
+  const m = minutes % 60;
+  return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`;
 }
 
 //Order destination in 1 day, start from hotel, and return the ordered list of candidates
