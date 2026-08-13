@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { notFound } from "next/navigation";
+import PlanLayout from "./PlanLayout";
 
 export default async function PlanPage({
   params,
@@ -57,24 +58,5 @@ export default async function PlanPage({
     }));
 
   // 4. Tạm render đơn giản để kiểm tra data
-  return (
-    <div style={{ padding: 40 }}>
-      <h1>{trip.title}</h1>
-      <p>{trip.start_date} → {trip.end_date}</p>
-
-      {days.map((day) => (
-        <div key={day.dayIndex} style={{ marginTop: 24 }}>
-          <h2>Ngày {day.dayIndex} — {day.date}</h2>
-          <ul>
-            {day.places.map((p) => (
-              <li key={p.id}>
-                {p.start_time?.slice(0, 5)} — {p.name}
-                {p.note ? ` (${p.note})` : ""}
-              </li>
-            ))}
-          </ul>
-        </div>
-      ))}
-    </div>
-  );
+  return <PlanLayout cityName={trip.title.replace(" Trip", "")} />;
 }
