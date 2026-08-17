@@ -11,7 +11,7 @@ export default async function PlanPage({
   const { planId } = await params;
   const supabase = await createClient();
 
-  // 1. Lấy trip + days + places (RLS tự lọc theo user)
+  // 1. Fetch trip + days + places (RLS filters by user)
   const { data: trip } = await supabase
     .from("trips")
     .select(`
@@ -26,7 +26,7 @@ export default async function PlanPage({
 
   if (!trip) notFound();
 
-  // 2. Gom tất cả place_id, đọc toạ độ + tên từ place_cache MỘT lần
+  // 2. Collect all place_ids, read name + coords from place_cache in one query
   const allIds = trip.trip_days.flatMap((d) =>
     d.trip_places.map((p) => p.google_place_id)
   );
@@ -36,12 +36,12 @@ export default async function PlanPage({
     .select("google_place_id, name, lat, lng")
     .in("google_place_id", allIds);
 
-  // map để tra nhanh: place_id → thông tin
+  // Lookup map: place_id -> place info
   const placeMap = new Map(
     (places ?? []).map((p) => [p.google_place_id, p])
   );
 
-  // 3. Sắp ngày + địa điểm theo đúng thứ tự
+  // 3. Sort days + places into correct order
   const days = [...trip.trip_days]
     .sort((a, b) => a.day_index - b.day_index)
     .map((day) => ({
@@ -57,6 +57,14 @@ export default async function PlanPage({
         })),
     }));
 
-  // 4. Tạm render đơn giản để kiểm tra data
-  return <PlanLayout cityName={trip.title.replace(" Trip", "")} />;
+  // 4. Render layout with data
+  const hasPlan = trip.trip_days.length > 0;
+
+  return (
+    <PlanLayout
+      cityName={trip.title.replace(" Trip", "")}
+      hasPlan={hasPlan}
+      days={days}
+    />
+  );
 }

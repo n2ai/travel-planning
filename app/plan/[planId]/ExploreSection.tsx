@@ -1,24 +1,24 @@
 type ExploreCard = {
-    id:string;
-    title:string;
-    subtitle:string;
-    emoji:string;
-}
+  id: string;
+  title: string;
+  subtitle: string;
+  emoji: string;
+};
 
-// Mock Data
+// Mock data — replace with real candidates later
 const MOCK_CARDS: ExploreCard[] = [
-  { id: "1", title: "Chỗ tham quan hàng đầu", subtitle: "Bảo tàng, đền chùa nổi bật", emoji: "🏛️" },
-  { id: "2", title: "Quán ăn ngon", subtitle: "Được đánh giá cao ở Hà Nội", emoji: "🍜" },
-  { id: "3", title: "Công viên & thiên nhiên", subtitle: "Không gian xanh trong thành phố", emoji: "🌳" },
+  { id: "1", title: "Top attractions", subtitle: "Popular museums & temples", emoji: "🏛️" },
+  { id: "2", title: "Best places to eat", subtitle: "Highly rated in Hanoi", emoji: "🍜" },
+  { id: "3", title: "Parks & nature", subtitle: "Green spaces around the city", emoji: "🌳" },
 ];
 
 export default function ExploreSection() {
   return (
     <section className="mb-8">
       <div className="mb-3 flex items-center justify-between">
-        <h2 className="text-lg font-black text-gray-900">Khám phá</h2>
+        <h2 className="text-lg font-black text-gray-900">Explore</h2>
         <button className="text-sm font-semibold text-[#BB00FF] hover:underline">
-          Xem tất cả
+          Browse all
         </button>
       </div>
 
