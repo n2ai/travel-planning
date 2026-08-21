@@ -7,6 +7,7 @@ const FIELD_MASK = [
   "places.displayName",
   "places.location",
   "places.rating",
+  "places.priceLevel",
 ].join(",");
 
 // Like suggestion 
@@ -32,8 +33,21 @@ function toCandidate(
         lat: p.location.latitude,
         lng: p.location.longitude,
         rating: p.rating ?? null, 
+        priceLevel: priceLevelToNumber(p.priceLevel),
         interest
     }
+}
+
+// Google returns priceLevel as an enum string in Places API (New)
+function priceLevelToNumber(pl?: string): number | null {
+  const map: Record<string, number> = {
+    PRICE_LEVEL_FREE: 0,
+    PRICE_LEVEL_INEXPENSIVE: 1,
+    PRICE_LEVEL_MODERATE: 2,
+    PRICE_LEVEL_EXPENSIVE: 3,
+    PRICE_LEVEL_VERY_EXPENSIVE: 4,
+  };
+  return pl ? map[pl] ?? null : null;
 }
 
 const RADIUS:Record<Pace,number> = {
@@ -96,6 +110,7 @@ async function cacheCandidates(candidates:Candidate[]){
     lat:c.lat,
     lng:c.lng,
     viewport:null,
+    price_level: c.priceLevel ?? null,
     cached_at:new Date().toISOString()
   }))
 

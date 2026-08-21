@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import ExploreSection from "./ExploreSection";
 import HotelSection from "./HotelSection";
 import GenerateSection from "./GenerateSection";
@@ -34,12 +34,46 @@ export default function PlanLayout({
   days: Day[];
 }) {
   const [active, setActive] = useState<Section>("overview");
+  const scrollRef = useRef<HTMLElement>(null);
 
   const navItems: { key: Section; label: string }[] = [
     { key: "overview", label: "Overview" },
     { key: "itinerary", label: "Itinerary" },
     { key: "budget", label: "Budget" },
   ];
+
+  // Scroll to a section when its nav item is clicked
+  const scrollToSection = (id: Section) => {
+    const el = document.getElementById(id);
+    if (el) {
+      el.scrollIntoView({ behavior: "smooth", block: "start" });
+      setActive(id);
+    }
+  };
+
+  // Auto-highlight the nav item of the section currently in view
+  useEffect(() => {
+    const container = scrollRef.current;
+    if (!container) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (entry.isIntersecting) {
+            setActive(entry.target.id as Section);
+          }
+        }
+      },
+      { root: container, rootMargin: "-40% 0px -55% 0px" }
+    );
+
+    navItems.forEach((item) => {
+      const el = document.getElementById(item.key);
+      if (el) observer.observe(el);
+    });
+
+    return () => observer.disconnect();
+  }, []);
 
   return (
     <div className="flex h-screen overflow-hidden bg-[#f4eddf]">
@@ -54,7 +88,7 @@ export default function PlanLayout({
           {navItems.map((item) => (
             <button
               key={item.key}
-              onClick={() => setActive(item.key)}
+              onClick={() => scrollToSection(item.key)}
               className={`rounded-lg px-3 py-2 text-left text-sm font-semibold transition ${
                 active === item.key
                   ? "bg-gradient-to-r from-[#BB00FF]/10 to-[#2F80ED]/10 text-[#BB00FF]"
@@ -67,8 +101,8 @@ export default function PlanLayout({
         </nav>
       </aside>
 
-      {/* ─── CONTENT (scrolls) ─── */}
-      <main className="flex-1 overflow-y-auto px-8 py-6">
+      {/* ─── CONTENT (one long scroll) ─── */}
+      <main ref={scrollRef} className="flex-1 overflow-y-auto px-8 py-6">
         <div className="mx-auto max-w-2xl">
           {/* Hero */}
           <div className="mb-6 rounded-2xl bg-white p-6 shadow-sm">
@@ -78,23 +112,22 @@ export default function PlanLayout({
             <p className="mt-1 text-sm text-gray-500">No dates yet · Add dates</p>
           </div>
 
-          {/* Overview tab */}
-          {active === "overview" && (
-            <>
-              <ExploreSection />
-              <HotelSection />
-              <GenerateSection />
-            </>
-          )}
+          {/* All sections rendered continuously, each with an id */}
+          <section id="overview" className="scroll-mt-6">
+            <ExploreSection />
+            <HotelSection />
+            <GenerateSection />
+          </section>
 
-          {/* Itinerary tab */}
-          {active === "itinerary" &&
-            (hasPlan ? <ItineraryList days={days} /> : <EmptyItinerary />)}
+          <section id="itinerary" className="scroll-mt-6">
+            <h2 className="mb-4 text-xl font-black text-gray-900">Itinerary</h2>
+            {hasPlan ? <ItineraryList days={days} /> : <EmptyItinerary />}
+          </section>
 
-          {/* Budget tab */}
-          {active === "budget" && (
-            <p className="text-gray-400">Budget (coming soon)</p>
-          )}
+          <section id="budget" className="scroll-mt-6 pb-24">
+            <h2 className="mb-4 text-xl font-black text-gray-900">Budget</h2>
+            <p className="text-gray-400">Coming soon</p>
+          </section>
         </div>
       </main>
 

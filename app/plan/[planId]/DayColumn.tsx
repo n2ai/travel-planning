@@ -15,10 +15,17 @@ type Day = {
   places: Stop[];
 };
 
-export default function DayColumn({ day }: { day: Day }) {
+export default function DayColumn({
+  day,
+  onUpdateStop,
+  onDeleteStop
+}: {
+  day: Day;
+  onUpdateStop: (dayIndex: number, stopId: string, patch: Partial<Stop>) => void;
+  onDeleteStop?: (dayIndex: number, stopId: string) => void;
+}) {
   return (
     <section className="mb-8">
-      {/* Day header */}
       <div className="mb-3 flex items-baseline gap-3">
         <h2 className="text-lg font-black text-gray-900">Day {day.dayIndex}</h2>
         {day.date && (
@@ -29,10 +36,15 @@ export default function DayColumn({ day }: { day: Day }) {
         </span>
       </div>
 
-      {/* Stops */}
       <div className="space-y-2">
         {day.places.map((stop) => (
-          <StopCard key={stop.id} stop={stop} />
+          <StopCard
+            key={stop.id}
+            stop={stop}
+            dayIndex={day.dayIndex}
+            onUpdate={onUpdateStop}
+            onDelete={onDeleteStop}
+          />
         ))}
       </div>
     </section>

@@ -33,5 +33,6 @@ export type Candidate = {
     lat:number 
     lng:number 
     rating:number | null 
+    priceLevel: number | null
     interest:Interest | "meal"
 }
