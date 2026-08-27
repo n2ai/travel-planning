@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useState, useRef, useEffect } from "react";
+import {useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 
 type SuggestedDestination = {
@@ -35,6 +35,7 @@ export default function PlanTripForm() {
   const timer = useRef<ReturnType<typeof setTimeout>>(undefined);
   const boxRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
@@ -66,7 +67,7 @@ export default function PlanTripForm() {
     setSuggestions([]);
   };
 
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const pickedPlanId = destination?.placeId
     if (!pickedPlanId) {
@@ -74,13 +75,41 @@ export default function PlanTripForm() {
       return;
     }
     
-    const params = new URLSearchParams();
-    if (startDate) params.set("startDate", startDate);
-    if (endDate) params.set("endDate", endDate);
-    const qs = params.toString();
+    // const params = new URLSearchParams();
+    // if (startDate) params.set("startDate", startDate);
+    // if (endDate) params.set("endDate", endDate);
+    // const qs = params.toString();
     
 
-    router.push(`/plan/${pickedPlanId}${qs ? `?${qs}` : ""}`);
+    // router.push(`/plan/${pickedPlanId}${qs ? `?${qs}` : ""}`);
+
+    setSubmitting(true);
+    try{
+      const res = await fetch("/api/trips", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          cityPlaceId: destination?.placeId,
+          startDate: startDate || null,
+          endDate: endDate || null
+        })
+      });
+      const data = await res.json();
+      if(data.mode === "saved" && data.planId){
+        router.push(`/plan/${data.planId}`);
+      }else{
+        sessionStorage.setItem("previewTrip", JSON.stringify(data.itinerary));
+        router.push("/plan/preview");
+      }
+
+
+    }catch(e){
+      console.error("Could not create trip plan", e);
+    }finally{
+      setSubmitting(false);
+    }
   }
 
   return (
@@ -145,7 +174,7 @@ export default function PlanTripForm() {
       <div className="mt-16 flex flex-col items-center">
         <button
           type="submit"
-          disabled={!destination}
+          disabled={!destination || submitting}
           className="rounded-full bg-linear-to-r from-[#2F80ED] to-[#BB00FF] px-9 py-4 text-base font-black text-white shadow-[0_14px_28px_rgba(124,58,237,0.28)] transition hover:-translate-y-1 hover:shadow-xl disabled:opacity-50 disabled:hover:translate-y-0"
         >
           Start planning

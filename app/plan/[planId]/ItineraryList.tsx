@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import DayColumn from "./DayColumn";
+import AuthModal from "./AuthModal";
 
 type Stop = {
   id: string;
@@ -18,9 +19,15 @@ type Day = {
   places: Stop[];
 };
 
-export default function ItineraryList({ days: initialDays }: { days: Day[] }) {
+export default function ItineraryList({ days: initialDays, isGuest = false }: { days: Day[]; isGuest: boolean }) {
   // Local state — starts from server data, mutates on edits
   const [days, setDays] = useState<Day[]>(initialDays);
+  const [showAuth, setShowAuth] = useState(false);
+
+  //Gues tries to edit -> show auth modal
+  const requireAuth = () => {
+    setShowAuth(true);
+  }
 
   // Update one field of one stop, then persist to DB
   const updateStop = (
@@ -28,6 +35,8 @@ export default function ItineraryList({ days: initialDays }: { days: Day[] }) {
     stopId: string,
     patch: Partial<Stop>
   ) => {
+    if (isGuest) return requireAuth();
+
     setDays((prev) =>
       prev.map((day) =>
         day.dayIndex !== dayIndex
@@ -46,6 +55,7 @@ export default function ItineraryList({ days: initialDays }: { days: Day[] }) {
 
   // Delete one stop, then persist to DB
   const deleteStop = (dayIndex: number, stopId: string) => {
+    if (isGuest) return requireAuth();
     setDays((prev) =>
       prev.map((day) =>
         day.dayIndex !== dayIndex
@@ -58,16 +68,20 @@ export default function ItineraryList({ days: initialDays }: { days: Day[] }) {
   };
 
   return (
-    <div>
-      {days.map((day) => (
-        <DayColumn
-          key={day.dayIndex}
-          day={day}
-          onUpdateStop={updateStop}
-          onDeleteStop={deleteStop}
-        />
-      ))}
-    </div>
+    <>
+      <div>
+        {days.map((day) => (
+          <DayColumn
+            key={day.dayIndex}
+            day={day}
+            onUpdateStop={updateStop}
+            onDeleteStop={deleteStop}
+          />
+        ))}
+      </div>
+      {showAuth && <AuthModal onClose={() => setShowAuth(false)} />}
+    </>
+    
   );
 }
 

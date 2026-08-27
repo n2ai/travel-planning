@@ -18,9 +18,7 @@ export async function POST(req: Request) {
     // 1. User Verify
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-      return NextResponse.json({ error: "Chưa đăng nhập" }, { status: 401 });
-    }
+    
 
     // 2. Read input from request body
     const body = await req.json();
@@ -61,22 +59,37 @@ export async function POST(req: Request) {
       return assignTimes(schedule);
     });
 
-    // 5. Save into DB
-    const planId = nanoid(12);
-    await saveTrip({
-      planId,
-      userId: user.id,
-      cityPlaceId,
-      title: `${cityName} Trip`,
-      startDate,
-      endDate,
-      days: scheduleByDay,
-    });
+    if(user) {
+      // 5. Save into DB
+      const planId = nanoid(12);
+      await saveTrip({
+        planId,
+        userId: user.id,
+        cityPlaceId,
+        title: `${cityName} Trip`,
+        startDate,
+        endDate,
+        days: scheduleByDay,
+      });
 
-    // 6. Return planId for client redirect
-    return NextResponse.json({ planId });
+      // 6. Return planId for client redirect
+      return NextResponse.json({ mode: "saved", planId });
+    }else{
+      // GUEST: Return Itenerary for preview, no save
+      return NextResponse.json({
+        mode: "preview",
+        itinerary: {
+          cityName,
+          startDate,
+          endDate,
+          cityPlaceId,
+          days: scheduleByDay,
+        },
+      });
+    }
+
   } catch (e) {
-    console.error("Generate lỗi:", e);
+    console.error("Failed to generate plan:", e);
     return NextResponse.json({ error: String(e) }, { status: 500 });
   }
 }
