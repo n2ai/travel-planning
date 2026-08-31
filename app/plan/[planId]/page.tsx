@@ -2,6 +2,8 @@ import { createClient } from "@/lib/supabase/server";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { notFound } from "next/navigation";
 import PlanLayout from "./PlanLayout";
+import { estimateBudget, type StopForBudget } from "@/lib/trip-gen/budget";
+
 
 export default async function PlanPage({
   params,
@@ -15,10 +17,10 @@ export default async function PlanPage({
   const { data: trip } = await supabase
     .from("trips")
     .select(`
-      id, plan_id, title, start_date, end_date, google_place_id,
+      id, plan_id, title, start_date, end_date, google_place_id, country_code,
       trip_days (
         id, day_index, date,
-        trip_places ( id, google_place_id, position, start_time, note )
+        trip_places ( id, google_place_id, position, start_time, note, interest )
       )
     `)
     .eq("plan_id", planId)
@@ -33,7 +35,7 @@ export default async function PlanPage({
 
   const { data: places } = await supabaseAdmin
     .from("place_cache")
-    .select("google_place_id, name, lat, lng")
+    .select("google_place_id, name, lat, lng, price_level") 
     .in("google_place_id", allIds);
 
   // Lookup map: place_id -> place info
@@ -60,11 +62,24 @@ export default async function PlanPage({
   // 4. Render layout with data
   const hasPlan = trip.trip_days.length > 0;
 
+  // 5. Estimate budget
+  const budgetStops: StopForBudget[] = trip.trip_days.flatMap((day) =>
+    day.trip_places.map((p) => ({
+      interest: p.interest ?? "meal",
+      priceLevel: placeMap.get(p.google_place_id)?.price_level ?? null,
+    }))
+  );
+
+  const numDays = trip.trip_days.length;
+
+  const budget = estimateBudget(budgetStops, numDays, trip.country_code ?? null);
+
   return (
     <PlanLayout
       cityName={trip.title.replace(" Trip", "")}
       hasPlan={hasPlan}
       days={days}
+      budget={budget}
     />
   );
 }

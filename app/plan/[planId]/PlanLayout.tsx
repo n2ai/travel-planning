@@ -6,8 +6,18 @@ import HotelSection from "./HotelSection";
 import GenerateSection from "./GenerateSection";
 import EmptyItinerary from "./EmptyItinerary";
 import ItineraryList from "./ItineraryList";
+import BudgetSection from "./BudgetSection";
 
 type Section = "overview" | "itinerary" | "budget";
+
+type Budget = {
+  food: number;
+  tickets: number;
+  hotel: number;
+  total: number;
+  perDay: number;
+  currency: string;
+};
 
 type Stop = {
   id: string;
@@ -28,10 +38,12 @@ export default function PlanLayout({
   cityName,
   hasPlan,
   days,
+  budget
 }: {
   cityName: string;
   hasPlan: boolean;
   days: Day[];
+  budget: Budget;
 }) {
   const [active, setActive] = useState<Section>("overview");
   const scrollRef = useRef<HTMLElement>(null);
@@ -126,7 +138,7 @@ export default function PlanLayout({
 
           <section id="budget" className="scroll-mt-6 pb-24">
             <h2 className="mb-4 text-xl font-black text-gray-900">Budget</h2>
-            <p className="text-gray-400">Coming soon</p>
+            <BudgetSection budget={budget} />
           </section>
         </div>
       </main>

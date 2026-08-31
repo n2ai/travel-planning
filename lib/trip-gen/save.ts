@@ -19,6 +19,7 @@ export async function saveTrip(input: SaveInput): Promise<string> {
       placeId: item.placeId,
       time: item.time ?? null,
       note: item.kind === "meal" ? item.mealType : null,
+      interest: item.interest
     })),
   }));
 

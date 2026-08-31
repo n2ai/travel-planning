@@ -18,6 +18,7 @@ export async function POST(req: Request) {
     plan_id: planId,
     user_id: user.id,
     google_place_id: cityPlaceId,
+    country_code: city.country_code,
     title: `${city.name} Trip`,
     start_date: startDate || null,
     end_date: endDate || null,

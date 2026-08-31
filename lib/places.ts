@@ -8,6 +8,7 @@ export type PlaceRow = {
     lat:number;
     lng:number;
     viewport:unknown|null;
+    country_code:string|null;
     cached_at:string;
 }
 
@@ -30,14 +31,17 @@ export async function getPlace(placeId:string):Promise<PlaceRow>{
     const res = await fetch(`https://places.googleapis.com/v1/places/${placeId}`,{
         headers:{
             "X-Goog-Api-Key": process.env.GOOGLE_PLACES_KEY!,
-            "X-Goog-FieldMask": "id,displayName,formattedAddress,location,viewport",
+            "X-Goog-FieldMask": "id,displayName,formattedAddress,location,viewport,addressComponents",
         }
     })
 
     if(!res.ok) throw new Error(`Places ${res.status}: ${await res.text()}`);
     const p = await res.json();
 
-    //3 Save cache
+    //3 After you have response, check if the place is valid 
+    const country = p.addressComponents?.find((c:any)=> c.type?.includes("country"))?.shortText ?? null;
+
+    //4 Save cache
     const row:PlaceRow = {
         google_place_id:p.id,
         name:p.displayName?.text ?? "",
@@ -46,6 +50,7 @@ export async function getPlace(placeId:string):Promise<PlaceRow>{
         lng:p.location.longitude,
         viewport:p.viewport ?? null,
         cached_at: new Date().toISOString(),
+        country_code:country,
     };
     await supabaseAdmin.from("place_cache").upsert(row);
     return row;
