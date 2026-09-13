@@ -7,6 +7,7 @@ import GenerateSection from "./GenerateSection";
 import EmptyItinerary from "./EmptyItinerary";
 import ItineraryList from "./ItineraryList";
 import BudgetSection from "./BudgetSection";
+import { type Day } from "./type";
 
 type Section = "overview" | "itinerary" | "budget";
 
@@ -19,34 +20,43 @@ type Budget = {
   currency: string;
 };
 
-type Stop = {
-  id: string;
-  name: string;
-  position: number;
-  start_time: string | null;
-  note: string | null;
-  rating?: number | null;
-};
-
-type Day = {
-  dayIndex: number;
-  date: string | null;
-  places: Stop[];
-};
-
 export default function PlanLayout({
   cityName,
   hasPlan,
   days,
-  budget
+  budget: initialBudget,
+  cityCenter,
+  planId,
 }: {
   cityName: string;
   hasPlan: boolean;
   days: Day[];
   budget: Budget;
+  cityCenter: { lat: number; lng: number } | null;
+  planId: string;
 }) {
   const [active, setActive] = useState<Section>("overview");
   const scrollRef = useRef<HTMLElement>(null);
+
+  // Budget is recalculated on the server whenever the itinerary changes
+  const [budget, setBudget] = useState<Budget>(initialBudget);
+
+  const refreshBudget = async () => {
+    console.log("REFRESH called");                    // ← log đầu tiên
+    try {
+      const res = await fetch(`/api/plan/${planId}/budget`);
+      console.log("status:", res.status);             // ← log status
+      if (!res.ok) {
+        console.error("budget api error:", await res.text());
+        return;
+      }
+      const data = await res.json();
+      console.log("Budget refreshed:", data.budget);
+      if (data.budget) setBudget(data.budget);
+    } catch (e) {
+      console.error("Budget refresh failed:", e);
+    }
+  };
 
   const navItems: { key: Section; label: string }[] = [
     { key: "overview", label: "Overview" },
@@ -133,7 +143,15 @@ export default function PlanLayout({
 
           <section id="itinerary" className="scroll-mt-6">
             <h2 className="mb-4 text-xl font-black text-gray-900">Itinerary</h2>
-            {hasPlan ? <ItineraryList days={days} /> : <EmptyItinerary />}
+            {hasPlan ? (
+              <ItineraryList
+                days={days}
+                cityCenter={cityCenter}
+                onItineraryChange={refreshBudget}
+              />
+            ) : (
+              <EmptyItinerary />
+            )}
           </section>
 
           <section id="budget" className="scroll-mt-6 pb-24">

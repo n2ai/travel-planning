@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { getPlace } from "@/lib/places";
 
 export async function PATCH(
   req: Request,
@@ -20,6 +21,11 @@ export async function PATCH(
   const patch: Record<string, unknown> = {};
   if ("start_time" in body) patch.start_time = body.start_time;
   if ("note" in body) patch.note = body.note;
+
+  if ("google_place_id" in body){
+    await getPlace(body.google_place_id);
+    patch.google_place_id = body.google_place_id;
+  }
 
   if (Object.keys(patch).length === 0) {
     return NextResponse.json({ error: "Nothing to update" }, { status: 400 });

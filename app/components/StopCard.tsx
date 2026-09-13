@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import { useSortable } from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 
 type Stop = {
   id: string;
@@ -9,6 +11,7 @@ type Stop = {
   start_time: string | null;
   note: string | null;
   rating?: number | null;
+  google_place_id?: string;
 };
 
 export default function StopCard({
@@ -16,16 +19,34 @@ export default function StopCard({
   dayIndex,
   onUpdate,
   onDelete,
+  onChangePlace,
 }: {
   stop: Stop;
   dayIndex: number;
   onUpdate: (dayIndex: number, stopId: string, patch: Partial<Stop>) => void;
   onDelete?: (dayIndex: number, stopId: string) => void;
+  onChangePlace?: (dayIndex: number, stopId: string) => void;
 }) {
   const isMeal = stop.note === "lunch" || stop.note === "dinner";
   const [editingTime, setEditingTime] = useState(false);
   const [editingNote, setEditingNote] = useState(false);
   const time = stop.start_time?.slice(0, 5) ?? "";
+
+  // dnd-kit sortable
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: stop.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  };
 
   // Meal stops use `note` for their label, so their editable note stays empty
   const noteText = isMeal ? "" : stop.note ?? "";
@@ -43,17 +64,22 @@ export default function StopCard({
 
   return (
     <div
+      ref={setNodeRef}
+      style={style}
       className={`group relative flex gap-2 rounded-xl border p-3 transition hover:shadow-md ${
         isMeal ? "border-amber-200 bg-amber-50/60" : "border-gray-200 bg-white"
       }`}
     >
-      {/* Drag handle (wired later) */}
-      <button
-        className="mt-1 shrink-0 cursor-grab text-gray-300 opacity-0 transition group-hover:opacity-100"
+      {/* Drag handle — only this grabs to reorder */}
+      {/* Drag handle */}
+      <div
+        {...attributes}
+        {...listeners}
+        className="mt-1 shrink-0 cursor-grab touch-none text-gray-300 opacity-0 transition group-hover:opacity-100 active:cursor-grabbing"
         aria-label="Drag to reorder"
       >
         ⣿
-      </button>
+      </div>
 
       {/* Gradient order badge */}
       <div className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#BB00FF] to-[#2F80ED] text-xs font-bold text-white">
@@ -123,13 +149,21 @@ export default function StopCard({
         <div className="mt-2 flex items-center gap-3 text-[11px] font-medium text-gray-400">
           <button className="hover:text-[#BB00FF]">✓ Mark visited</button>
           <button className="hover:text-[#BB00FF]">$ Add cost</button>
+          {onChangePlace && (
+            <button
+              onClick={() => onChangePlace(dayIndex, stop.id)}
+              className="hover:text-[#BB00FF]"
+            >
+              ⇄ Change
+            </button>
+          )}
           {stop.rating != null && (
             <span className="ml-auto text-gray-500">⭐ {stop.rating}</span>
           )}
         </div>
       </div>
 
-      {/* Delete button (wired later) */}
+      {/* Delete button */}
       <button
         onClick={() => onDelete?.(dayIndex, stop.id)}
         className="absolute right-2 top-2 text-gray-300 opacity-0 transition hover:text-red-500 group-hover:opacity-100"

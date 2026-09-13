@@ -13,6 +13,7 @@ export default async function PlanPage({
   const { planId } = await params;
   const supabase = await createClient();
 
+
   // 1. Fetch trip + days + places (RLS filters by user)
   const { data: trip } = await supabase
     .from("trips")
@@ -25,8 +26,22 @@ export default async function PlanPage({
     `)
     .eq("plan_id", planId)
     .maybeSingle();
-
+    
+  
   if (!trip) notFound();
+
+  //Get City Place lat and lng
+  const { data: cityPlace } = await supabaseAdmin
+    .from("place_cache")
+    .select("lat, lng")
+    .eq("google_place_id", trip.google_place_id)
+    .maybeSingle();
+
+  const cityCenter = cityPlace
+  ? { lat: cityPlace.lat, lng: cityPlace.lng }
+  : null;
+
+
 
   // 2. Collect all place_ids, read name + coords from place_cache in one query
   const allIds = trip.trip_days.flatMap((d) =>
@@ -47,6 +62,7 @@ export default async function PlanPage({
   const days = [...trip.trip_days]
     .sort((a, b) => a.day_index - b.day_index)
     .map((day) => ({
+      dayId: day.id,
       dayIndex: day.day_index,
       date: day.date,
       places: [...day.trip_places]
@@ -80,6 +96,8 @@ export default async function PlanPage({
       hasPlan={hasPlan}
       days={days}
       budget={budget}
+      cityCenter={cityCenter}
+      planId={planId}
     />
   );
 }

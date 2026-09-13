@@ -49,6 +49,18 @@ export function estimateBudget(
   countryCode: string | null,
   hotelPricePerNight?: number   // if user picked a hotel, use its real price
 ): BudgetResult {
+
+  if (numDays === 0 || stops.length === 0) {
+    return {
+      food: 0,
+      tickets: 0,
+      hotel: 0,
+      total: 0,
+      perDay: 0,
+      currency: "USD",
+    };
+  }
+
   const base = COUNTRY_BASE[countryCode ?? ""] ?? DEFAULT_BASE;
 
   let food = 0;

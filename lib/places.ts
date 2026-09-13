@@ -37,9 +37,13 @@ export async function getPlace(placeId:string):Promise<PlaceRow>{
 
     if(!res.ok) throw new Error(`Places ${res.status}: ${await res.text()}`);
     const p = await res.json();
+    console.log("getPlace RAW:", JSON.stringify(p, null, 2))
+    if (!p.location) {
+    throw new Error(`Place ${placeId} has no location`);
+    }
 
     //3 After you have response, check if the place is valid 
-    const country = p.addressComponents?.find((c:any)=> c.type?.includes("country"))?.shortText ?? null;
+    const country = p.addressComponents?.find((c:any)=> c.types?.includes("country"))?.shortText ?? null;
 
     //4 Save cache
     const row:PlaceRow = {
@@ -52,6 +56,13 @@ export async function getPlace(placeId:string):Promise<PlaceRow>{
         cached_at: new Date().toISOString(),
         country_code:country,
     };
-    await supabaseAdmin.from("place_cache").upsert(row);
+    const { error } = await supabaseAdmin
+        .from("place_cache")
+        .upsert(row, { onConflict: "google_place_id" });
+
+    if (error) {
+        console.error("UPSERT ERROR:", error);
+        throw new Error(`Cache write failed: ${error.message}`);
+    }
     return row;
 }
