@@ -1,16 +1,19 @@
 import Link from "next/link";
+import { createClient } from "@/lib/supabase/server";
 import PlanTripForm from "../components/PlanTripForm";
-import { PickedDestination } from "../components/PlanTripForm";
+import UserMenu from "../home/UserMenu";
 
-export default function PlanTripPage() {
-  
+export default async function PlanTripPage() {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
   return (
     <main className="min-h-screen bg-[#f4eddf] text-[#07182f]">
       {/* NAVBAR */}
       <header className="bg-linear-to-br from-[#fbe9ff] via-[#f4eddf] to-[#f4eddf] px-6 pt-8 sm:px-10 lg:px-16 xl:px-24">
         <nav className="relative z-50 flex w-full items-center justify-between">
           <div className="flex items-center gap-8 text-base font-extrabold sm:gap-10 sm:text-lg">
-            <Link href="/" className="transition hover:text-[#7c3aed]">
+            <Link href={user ? "/home" : "/"} className="transition hover:text-[#7c3aed]">
               Home
             </Link>
 
@@ -27,13 +30,17 @@ export default function PlanTripPage() {
             </a>
           </div>
 
-          <div className="flex items-center gap-8">
-            <Link
-              href="/login"
-              className="text-base font-extrabold text-[#07182f] transition hover:text-[#7c3aed] sm:text-lg"
-            >
-              Sign In
-            </Link>
+          <div className="flex items-center gap-6">
+            {user ? (
+              <UserMenu email={user.email ?? ""} />
+            ) : (
+              <Link
+                href="/login"
+                className="text-base font-extrabold text-[#07182f] transition hover:text-[#7c3aed] sm:text-lg"
+              >
+                Sign In
+              </Link>
+            )}
 
             <button
               type="button"
@@ -52,7 +59,7 @@ export default function PlanTripPage() {
           Plan a new trip
         </h1>
 
-        <PlanTripForm/>
+        <PlanTripForm />
       </section>
     </main>
   );

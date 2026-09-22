@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
+import UserMenu from "./UserMenu";
 import Link from "next/link";
 
 export default async function HomePage() {
@@ -24,7 +25,7 @@ export default async function HomePage() {
             <div className="h-9 w-9 rounded-lg bg-gradient-to-br from-[#BB00FF] to-[#2F80ED]" />
             <span className="text-xl font-black text-gray-900">Trippie</span>
           </div>
-          <span className="text-sm text-gray-500">{user.email}</span>
+          <UserMenu email={user.email ?? ""} />
         </div>
 
         {/* ─── Your trips ─── */}

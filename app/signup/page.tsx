@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import OAuthButtons from "../components/OAuthButtons";
 
 export default function SignupPage() {
   const router = useRouter();
@@ -18,224 +19,206 @@ export default function SignupPage() {
   const [passwordError, setPasswordError] = useState("");
   const [confirmPasswordError, setConfirmPasswordError] = useState("");
 
-  const passwordHasCapitalLetter = /[A-Z]/.test(password);
-  const passwordHasSpecialCharacter = /[!@#$%^&*(),.?":{}|<>]/.test(password);
+  const hasCapital = /[A-Z]/.test(password);
+  const hasSpecial = /[!@#$%^&*(),.?":{}|<>]/.test(password);
 
   function validateForm(): boolean {
-    let hasError = false;
+    let ok = true;
 
     if (username === "") {
       setUsernameError("Username is required");
-      hasError = true;
+      ok = false;
     }
 
     if (email === "") {
       setEmailError("Email is required");
-      hasError = true;
-    }
-
-    const emailFormat = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-    if (email !== "" && emailFormat.test(email) === false) {
+      ok = false;
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       setEmailError("Please enter a valid email");
-      hasError = true;
+      ok = false;
     }
 
     if (password === "") {
       setPasswordError("Password is required");
-      hasError = true;
-    }
-
-    if (
-      password !== "" &&
-      passwordHasCapitalLetter === false &&
-      passwordHasSpecialCharacter === false
-    ) {
-      setPasswordError(
-        "Password needs 1 capital letter and 1 special character"
-      );
-      hasError = true;
-    } else if (password !== "" && passwordHasCapitalLetter === false) {
+      ok = false;
+    } else if (!hasCapital && !hasSpecial) {
+      setPasswordError("Password needs 1 capital letter and 1 special character");
+      ok = false;
+    } else if (!hasCapital) {
       setPasswordError("Password needs 1 capital letter");
-      hasError = true;
-    } else if (password !== "" && passwordHasSpecialCharacter === false) {
+      ok = false;
+    } else if (!hasSpecial) {
       setPasswordError("Password needs 1 special character");
-      hasError = true;
+      ok = false;
     }
 
     if (confirmPassword === "") {
-      setConfirmPasswordError("Confirm password is required");
-      hasError = true;
+      setConfirmPasswordError("Please confirm your password");
+      ok = false;
+    } else if (password !== confirmPassword) {
+      setConfirmPasswordError("Passwords don't match");
+      ok = false;
     }
 
-    if (
-      password !== "" &&
-      confirmPassword !== "" &&
-      password !== confirmPassword
-    ) {
-      setConfirmPasswordError("Password not match");
-      hasError = true;
-    }
-
-    return hasError === false;
+    return ok;
   }
 
   async function createAccountClicked() {
-    // Reset loi cu truoc khi validate lai
     setUsernameError("");
     setEmailError("");
     setPasswordError("");
     setConfirmPasswordError("");
 
-    // Buoc 1: validate truoc, form loi thi dung lai, KHONG goi API
-    if (validateForm() === false) {
-      return;
-    }
+    if (!validateForm()) return;
 
-    // Buoc 2: goi API
     setLoading(true);
 
     try {
       const response = await fetch("/api/auth/signup", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username, email, password }),
       });
 
       const result = await response.json();
 
-      // Buoc 3: xu ly loi tu server (email/username da ton tai...)
-      if (response.ok === false) {
+      if (!response.ok) {
         const message = result.error ?? "Signup failed. Please try again.";
-
-        if (message.toLowerCase().includes("email")) {
-          setEmailError(message);
-        } else if (message.toLowerCase().includes("username")) {
-          setUsernameError(message);
-        } else {
-          alert(message);
-        }
-
+        if (message.toLowerCase().includes("email")) setEmailError(message);
+        else if (message.toLowerCase().includes("username")) setUsernameError(message);
+        else setEmailError(message);
         return;
       }
 
-      // Buoc 4: signup thanh cong
       if (result.session === null) {
-        // Email confirmation dang BAT -> user phai check mail truoc
-        alert(
-          "Account created! Please check your email to confirm your account."
-        );
-        router.push("/login");
+        // Email confirmation is on — user must verify first
+        router.push("/login?check-email=1");
       } else {
-        // Email confirmation dang TAT -> co session luon, vao app
-        router.push("/");
+        router.push("/home");
         router.refresh();
       }
-    } catch (error) {
-      // fetch chi throw khi loi mang / server sap
-      alert("An error occurred while creating account. Please try again.");
+    } catch {
+      setEmailError("Something went wrong. Please try again.");
     } finally {
       setLoading(false);
     }
   }
 
+  const inputClass =
+    "w-full rounded-xl border border-gray-300 bg-white/70 px-4 py-3.5 text-base text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-[#BB00FF] focus:bg-white";
+
   return (
-    <main className="min-h-screen bg-[#f4eddf] flex items-center justify-center px-4 py-8">
-      <div className="w-full max-w-[560px] min-h-[850px] bg-white rounded-3xl shadow-xl flex items-center justify-center p-8 text-gray-900">
-        <div className="w-full max-w-[380px] flex flex-col items-center">
-          <h1 className="mb-8 text-3xl font-bold text-gray-900">
-            Create Account
-          </h1>
+    <main className="flex min-h-screen items-center justify-center bg-gradient-to-br from-[#fbe9ff] via-[#f4eddf] to-[#f4eddf] px-6 py-12">
+      {/* Soft background rings */}
+      <div className="pointer-events-none fixed right-[-200px] top-[-140px] h-[640px] w-[640px] rounded-full border-[80px] border-white/30" />
+      <div className="pointer-events-none fixed left-[-180px] bottom-[-160px] h-[520px] w-[520px] rounded-full border-[70px] border-purple-100/30" />
 
-          <input
-            type="text"
-            placeholder="Username"
-            value={username}
-            onChange={(event) => setUsername(event.target.value)}
-            className="w-full rounded-lg border border-black bg-white px-4 py-4 text-base text-gray-900 placeholder:text-gray-500 outline-none"
-          />
+      <div className="relative z-10 w-full max-w-[400px]">
+        {/* Brand */}
+        <Link href="/" className="mb-8 flex items-center gap-2">
+          <div className="h-9 w-9 rounded-lg bg-gradient-to-br from-[#BB00FF] to-[#2F80ED]" />
+          <span className="text-xl font-black text-[#07182f]">Trippie</span>
+        </Link>
 
-          <p className="h-6 w-full text-left text-sm text-red-500">
-            {usernameError}
-          </p>
+        <h1 className="text-[40px] font-black leading-tight tracking-tight text-[#07182f]">
+          Start planning
+        </h1>
+        <p className="mb-7 mt-1 text-sm text-gray-600">
+          Free account. Build your first trip in minutes.
+        </p>
 
-          <input
-            type="email"
-            placeholder="Email"
-            value={email}
-            onChange={(event) => setEmail(event.target.value)}
-            className="w-full rounded-lg border border-black bg-white px-4 py-4 text-base text-gray-900 placeholder:text-gray-500 outline-none"
-          />
+        {/* Username */}
+        <label className="mb-1.5 block text-sm font-bold text-[#07182f]">
+          Username
+        </label>
+        <input
+          type="text"
+          value={username}
+          onChange={(e) => setUsername(e.target.value)}
+          placeholder="backpacker123"
+          className={inputClass}
+        />
+        <p className="mb-2 mt-1 min-h-5 text-sm text-red-500">{usernameError}</p>
 
-          <p className="h-6 w-full text-left text-sm text-red-500">
-            {emailError}
-          </p>
+        {/* Email */}
+        <label className="mb-1.5 block text-sm font-bold text-[#07182f]">
+          Email
+        </label>
+        <input
+          type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          placeholder="you@example.com"
+          className={inputClass}
+        />
+        <p className="mb-2 mt-1 min-h-5 text-sm text-red-500">{emailError}</p>
 
-          <input
-            type="password"
-            placeholder="Password"
-            value={password}
-            onChange={(event) => setPassword(event.target.value)}
-            className="w-full rounded-lg border border-black bg-white px-4 py-4 text-base text-gray-900 placeholder:text-gray-500 outline-none"
-          />
+        {/* Password */}
+        <label className="mb-1.5 block text-sm font-bold text-[#07182f]">
+          Password
+        </label>
+        <input
+          type="password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          placeholder="••••••••"
+          className={inputClass}
+        />
 
-          <div className="mt-2 mb-2 w-full rounded-lg bg-gray-100 p-3 text-sm">
-            <p className="mb-1 font-medium text-gray-700">
-              Password must contain:
-            </p>
-
-            <p
-              className={
-                passwordHasCapitalLetter ? "text-green-600" : "text-gray-500"
-              }
-            >
-              ✓ 1 capital letter
-            </p>
-
-            <p
-              className={
-                passwordHasSpecialCharacter
-                  ? "text-green-600"
-                  : "text-gray-500"
-              }
-            >
-              ✓ 1 special character &quot;Example: * @ # $ &quot;
-            </p>
-          </div>
-
-          <p className="h-6 w-full text-left text-sm text-red-500">
-            {passwordError}
-          </p>
-
-          <input
-            type="password"
-            placeholder="Confirm Password"
-            value={confirmPassword}
-            onChange={(event) => setConfirmPassword(event.target.value)}
-            className="w-full rounded-lg border border-black bg-white px-4 py-4 text-base text-gray-900 placeholder:text-gray-500 outline-none"
-          />
-
-          <p className="h-6 w-full text-left text-sm text-red-500">
-            {confirmPasswordError}
-          </p>
-
-          <button
-            onClick={createAccountClicked}
-            disabled={loading}
-            className="mt-3 mb-5 w-full rounded-lg bg-linear-to-r from-[#2F80ED] to-[#BB00FF] py-4 text-lg font-semibold text-white shadow-md transition hover:opacity-90 active:scale-[0.98] disabled:opacity-60"
-          >
-            {loading ? "Creating account..." : "Create Account"}
-          </button>
-
-          <p className="text-sm text-gray-700">
-            Already have an account?{" "}
-            <Link href="/login" className="text-blue-600 underline">
-              Sign In
-            </Link>
-          </p>
+        {/* Live requirements */}
+        <div className="mt-2 flex gap-4 text-xs">
+          <span className={hasCapital ? "font-semibold text-green-600" : "text-gray-400"}>
+            {hasCapital ? "✓" : "○"} 1 capital letter
+          </span>
+          <span className={hasSpecial ? "font-semibold text-green-600" : "text-gray-400"}>
+            {hasSpecial ? "✓" : "○"} 1 special character
+          </span>
         </div>
+        <p className="mb-2 mt-1 min-h-5 text-sm text-red-500">{passwordError}</p>
+
+        {/* Confirm password */}
+        <label className="mb-1.5 block text-sm font-bold text-[#07182f]">
+          Confirm password
+        </label>
+        <input
+          type="password"
+          value={confirmPassword}
+          onChange={(e) => setConfirmPassword(e.target.value)}
+          onKeyDown={(e) => e.key === "Enter" && createAccountClicked()}
+          placeholder="••••••••"
+          className={inputClass}
+        />
+        <p className="mb-2 mt-1 min-h-5 text-sm text-red-500">
+          {confirmPasswordError}
+        </p>
+
+        {/* Submit */}
+        <button
+          onClick={createAccountClicked}
+          disabled={loading}
+          className="mt-1 w-full rounded-full bg-gradient-to-r from-[#BB00FF] to-[#2F80ED] py-4 text-base font-black text-white shadow-[0_14px_28px_rgba(124,58,237,0.28)] transition hover:-translate-y-0.5 hover:shadow-xl disabled:opacity-60 disabled:hover:translate-y-0"
+        >
+          {loading ? "Creating account..." : "Create account"}
+        </button>
+
+        {/* Divider */}
+        <div className="my-7 flex items-center gap-4">
+          <div className="h-px flex-1 bg-gray-300" />
+          <span className="text-xs font-semibold uppercase tracking-wide text-gray-400">
+            or
+          </span>
+          <div className="h-px flex-1 bg-gray-300" />
+        </div>
+
+        {/* OAuth */}
+        <OAuthButtons />
+
+        <p className="mt-8 text-center text-sm text-gray-600">
+          Already have an account?{" "}
+          <Link href="/login" className="font-bold text-[#BB00FF] hover:underline">
+            Sign in
+          </Link>
+        </p>
       </div>
     </main>
   );
